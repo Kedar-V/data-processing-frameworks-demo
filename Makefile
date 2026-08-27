@@ -39,7 +39,8 @@ benchmark:
 
 benchmark-crossover:
 	$(PYTHON) benchmarks/benchmark.py --framework pandas --sizes $(SIMPLE_BENCHMARK_SIZES) --repeats 3 --output results/benchmark_results_simple.csv
-	$(PYTHON) benchmarks/benchmark.py --framework polars --sizes $(SIMPLE_BENCHMARK_SIZES) --repeats 3 --output results/benchmark_results_simple.csv
+	$(PYTHON) benchmarks/benchmark.py --framework polars-eager --sizes $(SIMPLE_BENCHMARK_SIZES) --repeats 3 --output results/benchmark_results_simple.csv
+	$(PYTHON) benchmarks/benchmark.py --framework polars-lazy --sizes $(SIMPLE_BENCHMARK_SIZES) --repeats 3 --output results/benchmark_results_simple.csv
 	$(PYTHON) benchmarks/benchmark.py --framework spark --sizes $(SIMPLE_BENCHMARK_SIZES) --repeats 3 --output results/benchmark_results_simple.csv
 
 benchmark-big:

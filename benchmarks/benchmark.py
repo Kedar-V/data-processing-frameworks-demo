@@ -28,7 +28,6 @@ DATASETS = {
 FRAMEWORKS = ["pandas", "polars-eager", "polars-lazy", "spark"]
 LABELS = {
     "pandas": "Pandas",
-    "polars": "Polars",
     "polars-eager": "Polars Eager",
     "polars-lazy": "Polars Lazy",
     "spark": "PySpark",
@@ -54,9 +53,7 @@ def timed_run(framework: str, ratings: Path, movies: Path, min_ratings: int) -> 
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--framework", choices=["all", "polars", *FRAMEWORKS], default="all"
-    )
+    parser.add_argument("--framework", choices=["all", *FRAMEWORKS], default="all")
     parser.add_argument("--sizes", nargs="+", choices=DATASETS, default=["1m"])
     parser.add_argument("--repeats", type=int, default=1)
     parser.add_argument("--min-ratings", type=int, default=1_000)

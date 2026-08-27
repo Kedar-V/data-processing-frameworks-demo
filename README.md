@@ -52,7 +52,8 @@ notebooks/movielens_dataframe_engines_simple.ipynb
 
 Every markdown section starts with a question that the following explanation,
 code, or output answers. The main path uses one Polars implementation so the
-story remains focused on execution architecture rather than API modes.
+story remains focused on execution architecture. The benchmark compares both
+Polars Eager and Polars Lazy, and the optional appendix explains the lazy plan.
 
 The live demo defaults to:
 
@@ -120,7 +121,7 @@ read → group → aggregate → filter → join → sort → materialize
 
 `make benchmark` runs the 1M dataset by default. `make benchmark-crossover`
 regenerates the simplified notebook's 100-row, 200K, 500K, 1M, 10M, and 32M
-results for Pandas, Polars, and PySpark using three repeats.
+results for Pandas, Polars Eager, Polars Lazy, and PySpark using three repeats.
 
 To regenerate the extended comparison directly:
 
@@ -136,13 +137,13 @@ machine that produced them, not a universal framework ranking. Startup,
 filesystem caches, JVM warm-up, available cores, and optimizer behavior all
 matter.
 
-The simplified notebook reads `results/benchmark_results_simple.csv`, where the
-framework is labeled simply as **Polars**. Live 1M measurements are shown
-separately and never overwrite the prepared medians. Its small-scale chart
-calculates the first tested size where Polars beats Pandas. On the recorded
-machine, Polars is already faster at 100 rows, so the evidence does not show a
-crossover within the tested range; it shows that the crossover is below 100
-rows, or absent for this workload and benchmark boundary.
+The simplified notebook reads `results/benchmark_results_simple.csv`. Live 1M
+measurements are shown separately and never overwrite the prepared medians.
+Its small-scale chart compares Pandas with both Polars execution modes and
+calculates their speedups. On the recorded machine, both Polars modes are
+already faster at 100 rows, so the evidence does not show a crossover within
+the tested range; it shows that the crossover is below 100 rows, or absent for
+this workload and benchmark boundary.
 
 ## Data layout
 
