@@ -36,8 +36,8 @@ make data
 
 Choose the **Dataframe Engines** kernel if Jupyter does not select it
 automatically. `make data` downloads the stable MovieLens 32M archive, extracts
-only `ratings.csv` and `movies.csv`, and creates seeded, nested 1M and 10M
-subsets plus the complete Parquet file.
+only `ratings.csv` and `movies.csv`, and creates seeded, nested 100-row, 200K,
+500K, 1M, and 10M subsets plus the complete Parquet file.
 
 Run the notebook once before class to confirm Java, refresh trusted outputs, and
 avoid spending teaching time on environment setup.
@@ -70,12 +70,13 @@ answer.
 ### 45-minute storyline
 
 - **0–4 min:** Are the environment and input data ready?
-- **4–12 min:** What do filtering and grouping do to rows?
-- **12–18 min:** How does Pandas execute the complete analysis?
-- **18–23 min:** What changes when Polars uses a parallel native engine?
-- **23–31 min:** How does PySpark turn the request into partitioned work?
-- **31–38 min:** Do the answers match, and how does runtime change with scale?
-- **38–45 min:** Which engine fits which workload?
+- **4–9 min:** Is the dataset clean, and when would normalization help?
+- **9–15 min:** What do filtering and grouping do to rows?
+- **15–21 min:** How does Pandas execute the complete analysis?
+- **21–26 min:** What changes when Polars uses a parallel native engine?
+- **26–34 min:** How does PySpark turn the request into partitioned work?
+- **34–40 min:** Do the answers match, and how does runtime change with scale?
+- **40–45 min:** Which engine fits which workload?
 
 Spark is deliberately local in this demo; its multi-machine architecture is
 explained conceptually. The optional Polars planning section appears after the
@@ -92,6 +93,7 @@ make pandas
 make polars
 make spark
 make benchmark
+make benchmark-crossover
 make validate
 ```
 
@@ -116,8 +118,11 @@ The shared timed path is:
 read → group → aggregate → filter → join → sort → materialize
 ```
 
-`make benchmark` runs the 1M dataset by default. Regenerate the prepared 1M,
-10M, and 32M results outside class with:
+`make benchmark` runs the 1M dataset by default. `make benchmark-crossover`
+regenerates the simplified notebook's 100-row, 200K, 500K, 1M, 10M, and 32M
+results for Pandas, Polars, and PySpark using three repeats.
+
+To regenerate the extended comparison directly:
 
 ```bash
 .venv/bin/python benchmarks/benchmark.py \
@@ -133,13 +138,20 @@ matter.
 
 The simplified notebook reads `results/benchmark_results_simple.csv`, where the
 framework is labeled simply as **Polars**. Live 1M measurements are shown
-separately and never overwrite the prepared medians.
+separately and never overwrite the prepared medians. Its small-scale chart
+calculates the first tested size where Polars beats Pandas. On the recorded
+machine, Polars is already faster at 100 rows, so the evidence does not show a
+crossover within the tested range; it shows that the crossover is below 100
+rows, or absent for this workload and benchmark boundary.
 
 ## Data layout
 
 ```text
 data/raw/ratings.csv
 data/raw/movies.csv
+data/parquet/ratings_100.parquet
+data/parquet/ratings_200k.parquet
+data/parquet/ratings_500k.parquet
 data/parquet/ratings_1m.parquet
 data/parquet/ratings_10m.parquet
 data/parquet/ratings_32m.parquet

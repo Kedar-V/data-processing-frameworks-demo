@@ -17,6 +17,9 @@ from implementations.pandas_query import run_query as pandas_query
 from implementations.polars_query import run_query as polars_query
 
 DATASETS = {
+    "100": (100, ROOT / "data/parquet/ratings_100.parquet"),
+    "200k": (200_000, ROOT / "data/parquet/ratings_200k.parquet"),
+    "500k": (500_000, ROOT / "data/parquet/ratings_500k.parquet"),
     "1m": (1_000_000, ROOT / "data/parquet/ratings_1m.parquet"),
     "10m": (10_000_000, ROOT / "data/parquet/ratings_10m.parquet"),
     "32m": (32_000_000, ROOT / "data/parquet/ratings_32m.parquet"),
@@ -25,6 +28,7 @@ DATASETS = {
 FRAMEWORKS = ["pandas", "polars-eager", "polars-lazy", "spark"]
 LABELS = {
     "pandas": "Pandas",
+    "polars": "Polars",
     "polars-eager": "Polars Eager",
     "polars-lazy": "Polars Lazy",
     "spark": "PySpark",
@@ -50,7 +54,9 @@ def timed_run(framework: str, ratings: Path, movies: Path, min_ratings: int) -> 
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--framework", choices=["all", *FRAMEWORKS], default="all")
+    parser.add_argument(
+        "--framework", choices=["all", "polars", *FRAMEWORKS], default="all"
+    )
     parser.add_argument("--sizes", nargs="+", choices=DATASETS, default=["1m"])
     parser.add_argument("--repeats", type=int, default=1)
     parser.add_argument("--min-ratings", type=int, default=1_000)

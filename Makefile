@@ -3,13 +3,14 @@ PIP := .venv/bin/pip
 RATINGS := data/parquet/ratings_1m.parquet
 MOVIES := data/parquet/movies.parquet
 BENCHMARK_SIZES ?= 1m
+SIMPLE_BENCHMARK_SIZES := 100 200k 500k 1m 10m 32m
 JAVA_HOME ?= $(shell if command -v brew >/dev/null 2>&1 && brew --prefix openjdk@17 >/dev/null 2>&1; then echo "$$(brew --prefix openjdk@17)/libexec/openjdk.jdk/Contents/Home"; else /usr/libexec/java_home -v 17 2>/dev/null; fi)
 SPARK_LOCAL_IP ?= 127.0.0.1
 
 export JAVA_HOME
 export SPARK_LOCAL_IP
 
-.PHONY: setup data synthetic pandas polars spark benchmark benchmark-big validate format notebook
+.PHONY: setup data synthetic pandas polars spark benchmark benchmark-crossover benchmark-big validate format notebook
 
 setup:
 	python3 -m venv .venv
@@ -35,6 +36,11 @@ spark:
 
 benchmark:
 	$(PYTHON) benchmarks/benchmark.py --framework all --sizes $(BENCHMARK_SIZES)
+
+benchmark-crossover:
+	$(PYTHON) benchmarks/benchmark.py --framework pandas --sizes $(SIMPLE_BENCHMARK_SIZES) --repeats 3 --output results/benchmark_results_simple.csv
+	$(PYTHON) benchmarks/benchmark.py --framework polars --sizes $(SIMPLE_BENCHMARK_SIZES) --repeats 3 --output results/benchmark_results_simple.csv
+	$(PYTHON) benchmarks/benchmark.py --framework spark --sizes $(SIMPLE_BENCHMARK_SIZES) --repeats 3 --output results/benchmark_results_simple.csv
 
 benchmark-big:
 	$(PYTHON) benchmarks/benchmark.py --framework spark --sizes 1b --repeats 3
