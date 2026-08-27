@@ -8,11 +8,34 @@ from pathlib import Path
 import polars as pl
 
 SEED = 42
+SYNTHETIC_COLUMNS = {
+    "completion_pct",
+    "watch_minutes",
+    "helpful_votes",
+    "rewatch_count",
+}
 TINY = 100
 TWO_HUNDRED_THOUSAND = 200_000
 FIVE_HUNDRED_THOUSAND = 500_000
 ONE_MILLION = 1_000_000
 TEN_MILLION = 10_000_000
+
+
+def add_synthetic_metrics(ratings: pl.DataFrame) -> pl.DataFrame:
+    """Add deterministic, plausible engagement metrics for teaching."""
+    event_hash = pl.struct("userId", "movieId", "timestamp").hash(seed=SEED)
+    completion_noise = (event_hash % 3_001).cast(pl.Float32) / 100 - 15
+    return ratings.with_columns(
+        (
+            (50 + pl.col("rating") * 8 + completion_noise)
+            .clip(0, 100)
+            .cast(pl.Float32)
+            .alias("completion_pct")
+        ),
+        (20 + (event_hash // 3_001) % 161).cast(pl.UInt16).alias("watch_minutes"),
+        ((event_hash // 483_161) % 51).cast(pl.UInt16).alias("helpful_votes"),
+        ((event_hash // 24_641_211) % 6).cast(pl.UInt8).alias("rewatch_count"),
+    )
 
 
 def prepare(raw: Path, output: Path, force: bool = False) -> None:
@@ -31,7 +54,12 @@ def prepare(raw: Path, output: Path, force: bool = False) -> None:
         output / "ratings_32m.parquet",
         output / "movies.parquet",
     ]
-    if all(path.exists() for path in expected) and not force:
+    schema_is_current = False
+    if expected[3].exists():
+        schema_is_current = SYNTHETIC_COLUMNS.issubset(
+            pl.read_parquet_schema(expected[3])
+        )
+    if all(path.exists() for path in expected) and schema_is_current and not force:
         print("Prepared Parquet files already exist; use --force to replace them.")
         return
 
@@ -47,6 +75,7 @@ def prepare(raw: Path, output: Path, force: bool = False) -> None:
     )
     if ratings.height < TEN_MILLION:
         raise ValueError(f"Expected at least 10M ratings, found {ratings.height:,}.")
+    ratings = add_synthetic_metrics(ratings)
 
     # One seeded shuffle creates nested subsets: the 1M rows are inside the 10M rows.
     ten_million = ratings.sample(n=TEN_MILLION, shuffle=True, seed=SEED)

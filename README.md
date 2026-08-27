@@ -6,7 +6,7 @@ MovieLens data.
 The goal is not to declare a universal benchmark winner. The lesson uses one
 analytics question—
 
-> **Which movies are both highly rated and widely rated?**
+> **Which widely rated movies have the strongest combined rating and viewing-completion score?**
 
 —to show why similar dataframe syntax can follow very different execution
 paths. Students build the analysis from filtering and grouping, run the same
@@ -26,7 +26,7 @@ Requirements:
 
 - Python 3.11+
 - Java 17+ for local PySpark
-- roughly 4 GB of free disk space for the download and prepared datasets
+- roughly 20 GB of free disk space for all prepared and synthetic scale datasets
 
 ```bash
 make setup
@@ -37,7 +37,10 @@ make data
 Choose the **Dataframe Engines** kernel if Jupyter does not select it
 automatically. `make data` downloads the stable MovieLens 32M archive, extracts
 only `ratings.csv` and `movies.csv`, and creates seeded, nested 100-row, 200K,
-500K, 1M, and 10M subsets plus the complete Parquet file.
+500K, 1M, and 10M subsets plus the complete Parquet file. Preparation adds
+deterministic synthetic numeric engagement metrics for the teaching workload.
+Run `make synthetic` separately to create the exact 70M, 100M, 350M, and 500M
+partitioned inputs.
 
 Run the notebook once before class to confirm Java, refresh trusted outputs, and
 avoid spending teaching time on environment setup.
@@ -66,7 +69,8 @@ TOP_N = 10
 `FAST_DEMO=True` uses a deterministic 1M-row subset so all three engines can run
 comfortably during class. `MIN_RATINGS=1_000` gives “widely rated” a concrete
 meaning and prevents a movie with one five-star rating from dominating the
-answer.
+answer. Rating and completion are normalized to 0–1 before they contribute
+equally to the final audience score.
 
 ### 45-minute storyline
 
@@ -100,9 +104,10 @@ make validate
 
 `make format` applies Black to the Python source and both notebooks.
 
-`make validate` confirms that Pandas, Polars, and PySpark return equivalent
-results within floating-point tolerance. Correctness comes before performance:
-a fast wrong answer is still wrong.
+`make validate` checks exact row counts, enriched schemas, feature ranges,
+nested subsets, and equivalent Pandas, Polars, and PySpark results within
+floating-point tolerance. Correctness comes before performance: a fast wrong
+answer is still wrong.
 
 ## Benchmark methodology
 
@@ -116,12 +121,14 @@ The notebook deliberately separates:
 The shared timed path is:
 
 ```text
-read → group → aggregate → filter → join → sort → materialize
+read six metrics → aggregate movie profiles → filter → normalize
+                 → join → sort → materialize
 ```
 
 `make benchmark` runs the 1M dataset by default. `make benchmark-crossover`
-regenerates the simplified notebook's 100-row, 200K, 500K, 1M, 10M, and 32M
-results for Pandas, Polars Eager, Polars Lazy, and PySpark using three repeats.
+regenerates the simplified notebook's results from 100 rows through 500M using
+three repeats. To protect local memory, Pandas stops after 100M, Polars Eager
+after 350M, and Polars Lazy plus PySpark continue through 500M.
 
 To regenerate the extended comparison directly:
 
@@ -157,16 +164,20 @@ data/parquet/ratings_1m.parquet
 data/parquet/ratings_10m.parquet
 data/parquet/ratings_32m.parquet
 data/parquet/movies.parquet
+data/synthetic/ratings_70m.parquet/
+data/synthetic/ratings_100m.parquet/
+data/synthetic/ratings_350m.parquet/
+data/synthetic/ratings_500m.parquet/
 ```
 
 Raw and prepared data are intentionally ignored by Git. MovieLens is provided
 by GroupLens; review its dataset README and terms before redistributing data.
 
-## Billion-row scale point
+## Large synthetic scale points
 
-The chart includes a prepared 1,024,006,528-row synthetic point. It repeats the
-32M ratings dataset as 32 Parquet partitions, so it tests scale rather than new
-movie behavior.
+The chart includes exact 70M, 100M, 350M, and 500M-row synthetic points. Each
+repeats the enriched 32M ratings source and writes a partial final partition
+when needed, so these inputs test scale rather than new movie behavior.
 
 To reproduce it:
 
@@ -175,11 +186,10 @@ make synthetic
 make benchmark-big
 ```
 
-This requires approximately 5 GiB of disk. The large Polars run uses its
-planning interface, demonstrated in the optional notebook appendix, so the
-engine can scan the partitioned source without first creating one enormous
-input dataframe. Pandas is intentionally omitted at this size to avoid an
-unsafe memory experiment.
+The large Polars run uses its planning interface so the engine can scan
+partitioned sources without first creating one enormous eager dataframe.
+Unsafe framework/size combinations are intentionally omitted rather than
+treated as zero-runtime results.
 
 The lesson is not “Spark wins after exactly N rows.” Hardware, caching,
 partitioning, and optimizer behavior can move the crossover. Spark's durable

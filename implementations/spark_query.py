@@ -7,6 +7,18 @@ from pathlib import Path
 
 from pyspark.sql import DataFrame, SparkSession, functions as F
 
+RATING_MIN = 0.5
+RATING_RANGE = 4.5
+COMPLETION_RANGE = 100.0
+RATING_COLUMNS = [
+    "movieId",
+    "rating",
+    "completion_pct",
+    "watch_minutes",
+    "helpful_votes",
+    "rewatch_count",
+]
+
 
 def create_session() -> SparkSession:
     spark = (
@@ -26,18 +38,30 @@ def run_query(
     movies_path: Path,
     min_ratings: int = 1_000,
 ) -> DataFrame:
-    ratings = spark.read.parquet(str(ratings_path)).select("movieId", "rating")
+    ratings = spark.read.parquet(str(ratings_path)).select(*RATING_COLUMNS)
     movies = spark.read.parquet(str(movies_path)).select("movieId", "title")
     return (
         ratings.groupBy("movieId")
         .agg(
             F.avg("rating").alias("average_rating"),
             F.count("*").alias("rating_count"),
+            F.avg("completion_pct").alias("average_completion_pct"),
+            F.avg("watch_minutes").alias("average_watch_minutes"),
+            F.sum("helpful_votes").alias("total_helpful_votes"),
+            F.avg("rewatch_count").alias("average_rewatch_count"),
         )
         .filter(F.col("rating_count") >= min_ratings)
         .join(movies, "movieId")
+        .withColumn(
+            "audience_score",
+            (
+                (F.col("average_rating") - RATING_MIN) / RATING_RANGE
+                + F.col("average_completion_pct") / COMPLETION_RANGE
+            )
+            / 2,
+        )
         .orderBy(
-            F.desc("average_rating"),
+            F.desc("audience_score"),
             F.desc("rating_count"),
             F.asc("movieId"),
         )

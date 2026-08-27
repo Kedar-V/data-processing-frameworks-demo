@@ -17,6 +17,7 @@ dependencies = [
     "pyarrow",
     "pyspark",
     "seaborn",
+    "tqdm",
 ]
 
 [tool.setuptools]

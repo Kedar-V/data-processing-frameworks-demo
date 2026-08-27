@@ -7,6 +7,18 @@ from pathlib import Path
 
 import polars as pl
 
+RATING_MIN = 0.5
+RATING_RANGE = 4.5
+COMPLETION_RANGE = 100.0
+RATING_COLUMNS = [
+    "movieId",
+    "rating",
+    "completion_pct",
+    "watch_minutes",
+    "helpful_votes",
+    "rewatch_count",
+]
+
 
 def _parquet_source(path: Path) -> str | Path:
     """Return a glob for partitioned Parquet directories."""
@@ -23,11 +35,24 @@ def _pipeline(
         .agg(
             pl.col("rating").mean().alias("average_rating"),
             pl.len().alias("rating_count"),
+            pl.col("completion_pct").mean().alias("average_completion_pct"),
+            pl.col("watch_minutes").mean().alias("average_watch_minutes"),
+            pl.col("helpful_votes").sum().alias("total_helpful_votes"),
+            pl.col("rewatch_count").mean().alias("average_rewatch_count"),
         )
         .filter(pl.col("rating_count") >= min_ratings)
         .join(movies.select("movieId", "title"), on="movieId")
+        .with_columns(
+            (
+                (
+                    (pl.col("average_rating") - RATING_MIN) / RATING_RANGE
+                    + pl.col("average_completion_pct") / COMPLETION_RANGE
+                )
+                / 2
+            ).alias("audience_score")
+        )
         .sort(
-            ["average_rating", "rating_count", "movieId"],
+            ["audience_score", "rating_count", "movieId"],
             descending=[True, True, False],
         )
     )
@@ -42,12 +67,12 @@ def run_query(
     ratings_source = _parquet_source(ratings_path)
     if lazy:
         return _pipeline(
-            pl.scan_parquet(ratings_source).select("movieId", "rating"),
+            pl.scan_parquet(ratings_source).select(RATING_COLUMNS),
             pl.scan_parquet(movies_path),
             min_ratings,
         ).collect()
     return _pipeline(
-        pl.read_parquet(ratings_source, columns=["movieId", "rating"]),
+        pl.read_parquet(ratings_source, columns=RATING_COLUMNS),
         pl.read_parquet(movies_path, columns=["movieId", "title"]),
         min_ratings,
     )
