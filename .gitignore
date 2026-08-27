@@ -216,3 +216,16 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# MovieLens source and generated datasets
+data/raw/*
+data/parquet/*
+data/synthetic/*
+!data/raw/.gitkeep
+!data/parquet/.gitkeep
+!data/synthetic/.gitkeep
+
+# Spark runtime output
+spark-warehouse/
+metastore_db/
+derby.log
