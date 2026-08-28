@@ -128,6 +128,45 @@ make rust-notebook
 keeps the teaching examples honest as Rust versions change. Compiled binaries
 go to `rust/build/`, which is Git-ignored.
 
+### Teaching part 2 in 20 minutes
+
+The notebook is built as one question — *where does Polars get its speed?* —
+with six numbered answers that accumulate as you go. Section *n* ends by adding
+line *n* to a list, and section 8 reads the finished list back. Each heading
+carries its own time budget, and they add up to twenty minutes.
+
+Run it once before class. The first `rustc` call has to compile, and you want
+that already done.
+
+| Time | Section | The one thing to say | Point at |
+|---|---|---|---|
+| 0:00 | intro | Polars beat Pandas in part 1, and Polars is Rust. We are opening the hood. | the ~3x from part 1 |
+| 2:00 | 1 | The compiler reads everything before anything runs. | the compile line, then the instant run |
+| 4:00 | 2 | `mut` is how the compiler learns what can change. | the `help:` line in the E0384 error |
+| 6:00 | 3 | No collector. The `free` is written while compiling. | `FREE 64 MB` landing *before* "back in main" |
+| 9:00 | 4 | One owner, so there is always one place the `free` belongs. | "value moved here" |
+| 11:00 | 5 | One writer or many readers, never both. | the Python loop that leaves one `2` behind |
+| 13:00 | 6 | That same rule is what makes threads safe. | the flat Python line against the climbing Rust one |
+| 16:00 | 7 | Same answer in both languages first, then the number. | the assertion passing, then the bar chart |
+| 18:00 | 8 | Read the six back, and name the tools they already use. | the finished list |
+
+If you are running behind, section 2 and the Python cell in section 4 are the
+most skippable. Do not cut section 3 or the chart in section 7 — those are the
+two moments the argument actually lands.
+
+Questions that come up every time:
+
+- *Why is debug Rust slower than Polars?* Because `-O` is off. That is why the
+  file is compiled twice.
+- *Is Rust always fifty times faster?* No. That is one hand-written loop on one
+  machine, and the notebook prints the machine under the chart for that reason.
+  The shape is the lesson, not the multiple.
+- *Should I learn Rust?* Not in order to do data analysis. To write the layer
+  underneath one, or to read the source of the tools you already depend on.
+- *Why `&Vec<f64>` and not `&[f64]`?* Because slices are one more concept, and
+  these files deliberately trade idiom for readability. Clippy will disagree,
+  and clippy is right about real code.
+
 ## The shared query
 
 One query definition is used by part 1's notebook, the CLI entry points in
