@@ -11,7 +11,7 @@ SPARK_LOCAL_IP ?= 127.0.0.1
 export JAVA_HOME
 export SPARK_LOCAL_IP
 
-.PHONY: setup data synthetic pandas polars spark benchmark benchmark-crossover benchmark-big validate format notebook
+.PHONY: setup data synthetic pandas polars spark benchmark benchmark-crossover benchmark-big validate format notebook rust rust-errors rust-notebook
 
 setup:
 	python3 -m venv .venv
@@ -61,3 +61,12 @@ format:
 
 notebook:
 	$(PYTHON) -m jupyter lab notebooks/movielens_dataframe_engines_simple.ipynb
+
+rust:
+	$(PYTHON) scripts/run_rust_examples.py
+
+rust-errors:
+	$(PYTHON) scripts/run_rust_examples.py --errors
+
+rust-notebook:
+	$(PYTHON) -m jupyter lab notebooks/rust_vs_python_intro.ipynb

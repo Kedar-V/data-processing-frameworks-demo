@@ -226,6 +226,9 @@ data/formats/*
 !data/parquet/.gitkeep
 !data/synthetic/.gitkeep
 
+# Compiled Rust examples
+rust/build/
+
 # Spark runtime output
 spark-warehouse/
 metastore_db/

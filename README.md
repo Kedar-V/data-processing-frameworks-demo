@@ -1,19 +1,23 @@
 # Dataframe Engines Teaching Demo
 
-A short, run-it-yourself introduction to data formats and dataframe engines,
-built for a data engineering course. Students run the cells, watch file size
-and runtime change with scale, and leave with a feel for CSV vs Parquet and
-Pandas vs Polars vs PySpark. It is deliberately **not** a data analysis
-assignment — that comes later, on a dataset each student chooses.
-
-The classroom notebook is:
+Two short, run-it-yourself notebooks for a data engineering course. Students
+run the cells and watch the numbers change, rather than being told what to
+expect. Neither is a data analysis assignment — that comes later, on a dataset
+each student chooses.
 
 ```text
-notebooks/movielens_dataframe_engines_simple.ipynb
+notebooks/movielens_dataframe_engines_simple.ipynb   # part 1: formats and engines
+notebooks/rust_vs_python_intro.ipynb                 # part 2: a first look at Rust
 ```
 
-It is designed to be walked through in about 20 minutes and executes in well
-under a minute on a modern laptop.
+Each is designed to be walked through in about 20 minutes, and each executes
+in well under a minute on a modern laptop. Part 2 stands on part 1's punchline:
+Polars was several times faster than Pandas, and Polars is written in Rust.
+
+## Part 1: formats and engines
+
+Students watch file size and runtime change with scale, and leave with a feel
+for CSV vs Parquet and Pandas vs Polars vs PySpark.
 
 ## Student setup
 
@@ -39,7 +43,7 @@ MovieLens 32M archive and writes seeded, nested 100-row, 200K, 500K, 1M, 10M,
 and full 32M Parquet subsets. Run the notebook once before class so Java and
 the data are known-good.
 
-## What the notebook covers
+## What part 1 covers
 
 1. **Environment** — kernel, packages, and a printed description of the machine,
    since every runtime below belongs to that machine.
@@ -65,9 +69,68 @@ the data are known-good.
 The notebook writes its CSV/Parquet comparison files to `data/formats/`, which
 is Git-ignored and recreated on every run.
 
+## Part 2: a first look at Rust
+
+`notebooks/rust_vs_python_intro.ipynb` introduces the handful of Rust ideas
+that explain part 1's timings, for students who only know Python. It is not a
+programming course: each idea gets one tiny program, and roughly half of those
+programs are *expected to fail*, because the point is that in Rust a whole
+category of bug is a compile error.
+
+It needs Rust, which students install with `rustup`:
+
+```bash
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh   # macOS, Linux
+```
+
+On Windows, run `rustup-init.exe` from <https://rustup.rs>. On macOS
+`brew install rust` also works. No new Jupyter kernel is needed — the notebook
+runs on the same **Dataframe Engines** kernel and shells out to `rustc`.
+
+It covers, in order:
+
+1. **The compile step** — the same file checked before it runs, and what a
+   binary is. Pip-installing Polars downloads one.
+2. **Immutable by default** — `let` vs `let mut`, next to Python, where every
+   name is rebindable and a frozen dataclass only complains at runtime.
+3. **Where the memory goes** — no garbage collector and no reference counting;
+   a `Drop` implementation prints at the exact moment memory is released, and
+   the Python cell next to it shows a reference cycle surviving `del` until the
+   collector runs.
+4. **Ownership** — moving, borrowing, and cloning, against the Python aliasing
+   bug where `b = a` gives two names for one list.
+5. **Borrowing** — one writer or many readers, and the Python loop that removes
+   items while iterating and silently returns the wrong answer.
+6. **Concurrency** — the same CPU-bound total on 1, 2, 4, and 8 threads in both
+   languages. Rust's speedup line climbs and Python's is flat, because of the
+   GIL. Then four threads sharing a counter, rejected at compile time.
+7. **The same group-by, both languages** — five million ratings generated from
+   the same seed with the same arithmetic, counted in half-stars so the totals
+   are integers and cannot drift. The notebook asserts the answers match before
+   it compares any timings, then adds Polars to the chart, which is the point:
+   you do not have to choose between Python's ecosystem and Rust's speed.
+
+The Rust files are real files, not notebook strings, so students can keep
+editing them after class:
+
+```text
+rust/examples/0{1..7}_*.rs              # the working examples
+rust/examples/wont_compile/*.rs         # the four that must not compile
+```
+
+```bash
+make rust          # compile and run every working example
+make rust-errors   # compile the four that should fail, and show the errors
+make rust-notebook
+```
+
+`make rust-errors` exits non-zero if any of them *succeeds*, which is what
+keeps the teaching examples honest as Rust versions change. Compiled binaries
+go to `rust/build/`, which is Git-ignored.
+
 ## The shared query
 
-One query definition is used by the notebook, the CLI entry points in
+One query definition is used by part 1's notebook, the CLI entry points in
 `implementations/`, the benchmark harness, and `make validate`:
 
 ```text
@@ -79,15 +142,22 @@ read movieId, rating -> group by movieId -> mean(rating), count(rating)
 Keeping a single definition is what makes the notebook's live timings and the
 pre-measured scaling chart comparable.
 
+Part 2 uses its own dataset — five million ratings generated from a fixed seed
+in both languages — because its comparison is between Python and Rust, not
+between file formats. It asserts the two answers match before reporting any
+timing.
+
 ## Commands
 
 ```bash
-make format     # Black over the Python sources and both notebooks
+make format     # Black over the Python sources and every notebook
 make pandas
 make polars
 make spark
 make benchmark
 make validate
+make rust           # part 2: compile and run the working Rust examples
+make rust-errors    # part 2: the examples that must not compile
 ```
 
 `make validate` checks row counts, schemas, nested subsets, and that Pandas,
@@ -135,6 +205,10 @@ cores, and optimizer behavior all matter. The lesson is not "Spark wins after
 exactly N rows" — it is that Spark's fixed overhead stops mattering once the
 data outgrows one machine.
 
+The same caveat applies to part 2. Its Rust-versus-Python ratios describe one
+machine and one hand-written loop, and the notebook prints the machine under
+each chart for that reason. The lesson is the shape of the gap, not the number.
+
 ## Data layout
 
 ```text
@@ -145,6 +219,9 @@ data/parquet/movies.parquet
 data/formats/ratings_{100,100k,1m}.{csv,parquet}
 data/synthetic/ratings_{70m,100m,350m,500m,1b}.parquet/
 ```
+
+Part 2 needs none of this: it generates its own five million rows in memory
+from a fixed seed, so it runs on a laptop that has never run `make data`.
 
 Raw and generated data are intentionally ignored by Git. MovieLens is provided
 by GroupLens; review its dataset README and terms before redistributing data.
