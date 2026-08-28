@@ -221,6 +221,7 @@ __marimo__/
 data/raw/*
 data/parquet/*
 data/synthetic/*
+data/formats/*
 !data/raw/.gitkeep
 !data/parquet/.gitkeep
 !data/synthetic/.gitkeep

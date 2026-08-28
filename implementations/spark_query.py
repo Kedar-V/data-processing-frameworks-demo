@@ -7,17 +7,7 @@ from pathlib import Path
 
 from pyspark.sql import DataFrame, SparkSession, functions as F
 
-RATING_MIN = 0.5
-RATING_RANGE = 4.5
-COMPLETION_RANGE = 100.0
-RATING_COLUMNS = [
-    "movieId",
-    "rating",
-    "completion_pct",
-    "watch_minutes",
-    "helpful_votes",
-    "rewatch_count",
-]
+RATING_COLUMNS = ["movieId", "rating"]
 
 
 def create_session() -> SparkSession:
@@ -43,28 +33,12 @@ def run_query(
     return (
         ratings.groupBy("movieId")
         .agg(
-            F.avg("rating").alias("average_rating"),
-            F.count("*").alias("rating_count"),
-            F.avg("completion_pct").alias("average_completion_pct"),
-            F.avg("watch_minutes").alias("average_watch_minutes"),
-            F.sum("helpful_votes").alias("total_helpful_votes"),
-            F.avg("rewatch_count").alias("average_rewatch_count"),
+            F.avg("rating").alias("avg_rating"),
+            F.count("rating").alias("rating_count"),
         )
         .filter(F.col("rating_count") >= min_ratings)
         .join(movies, "movieId")
-        .withColumn(
-            "audience_score",
-            (
-                (F.col("average_rating") - RATING_MIN) / RATING_RANGE
-                + F.col("average_completion_pct") / COMPLETION_RANGE
-            )
-            / 2,
-        )
-        .orderBy(
-            F.desc("audience_score"),
-            F.desc("rating_count"),
-            F.asc("movieId"),
-        )
+        .orderBy(F.desc("avg_rating"), F.asc("movieId"))
     )
 
 

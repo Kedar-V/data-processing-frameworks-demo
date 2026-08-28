@@ -4,7 +4,7 @@ RATINGS := data/parquet/ratings_1m.parquet
 MOVIES := data/parquet/movies.parquet
 BENCHMARK_SIZES ?= 1m
 LOCAL_BENCHMARK_SIZES := 100 200k 500k 1m 10m 32m
-LARGE_BENCHMARK_SIZES := 70m 100m 350m 500m
+LARGE_BENCHMARK_SIZES := 70m 100m 350m 500m 1b
 JAVA_HOME ?= $(shell if command -v brew >/dev/null 2>&1 && brew --prefix openjdk@17 >/dev/null 2>&1; then echo "$$(brew --prefix openjdk@17)/libexec/openjdk.jdk/Contents/Home"; else /usr/libexec/java_home -v 17 2>/dev/null; fi)
 SPARK_LOCAL_IP ?= 127.0.0.1
 
@@ -28,6 +28,7 @@ synthetic:
 	$(PYTHON) scripts/create_synthetic_data.py --rows 100000000 --output data/synthetic/ratings_100m.parquet
 	$(PYTHON) scripts/create_synthetic_data.py --rows 350000000 --output data/synthetic/ratings_350m.parquet
 	$(PYTHON) scripts/create_synthetic_data.py --rows 500000000 --output data/synthetic/ratings_500m.parquet
+	$(PYTHON) scripts/create_synthetic_data.py --rows 1000000000 --output data/synthetic/ratings_1b.parquet
 
 pandas:
 	$(PYTHON) implementations/pandas_query.py --ratings $(RATINGS) --movies $(MOVIES)
@@ -59,4 +60,4 @@ format:
 	$(PYTHON) -m black --target-version py311 benchmarks implementations scripts notebooks/*.ipynb
 
 notebook:
-	$(PYTHON) -m jupyter lab notebooks/movielens_dataframe_engines.ipynb
+	$(PYTHON) -m jupyter lab notebooks/movielens_dataframe_engines_simple.ipynb

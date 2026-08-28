@@ -16,16 +16,7 @@ from implementations.polars_query import run_query as polars_query
 RATINGS = ROOT / "data/parquet/ratings_1m.parquet"
 MOVIES = ROOT / "data/parquet/movies.parquet"
 MIN_RATINGS = 1_000
-COLUMNS = [
-    "movieId",
-    "average_rating",
-    "rating_count",
-    "average_completion_pct",
-    "average_watch_minutes",
-    "total_helpful_votes",
-    "average_rewatch_count",
-    "audience_score",
-]
+COLUMNS = ["movieId", "avg_rating", "rating_count", "title"]
 
 
 def canonical(frame: pd.DataFrame) -> pd.DataFrame:

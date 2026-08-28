@@ -7,17 +7,7 @@ from pathlib import Path
 
 import pandas as pd
 
-RATING_MIN = 0.5
-RATING_RANGE = 4.5
-COMPLETION_RANGE = 100.0
-RATING_COLUMNS = [
-    "movieId",
-    "rating",
-    "completion_pct",
-    "watch_minutes",
-    "helpful_votes",
-    "rewatch_count",
-]
+RATING_COLUMNS = ["movieId", "rating"]
 
 
 def run_query(
@@ -25,28 +15,15 @@ def run_query(
 ) -> pd.DataFrame:
     ratings = pd.read_parquet(ratings_path, columns=RATING_COLUMNS)
     movies = pd.read_parquet(movies_path, columns=["movieId", "title"])
-    result = (
+    return (
         ratings.groupby("movieId")
-        .agg(
-            average_rating=("rating", "mean"),
-            rating_count=("rating", "count"),
-            average_completion_pct=("completion_pct", "mean"),
-            average_watch_minutes=("watch_minutes", "mean"),
-            total_helpful_votes=("helpful_votes", "sum"),
-            average_rewatch_count=("rewatch_count", "mean"),
-        )
+        .agg(avg_rating=("rating", "mean"), rating_count=("rating", "count"))
         .query("rating_count >= @min_ratings")
         .reset_index()
         .merge(movies, on="movieId")
+        .sort_values(["avg_rating", "movieId"], ascending=[False, True])
+        .reset_index(drop=True)
     )
-    result["audience_score"] = (
-        (result["average_rating"] - RATING_MIN) / RATING_RANGE
-        + result["average_completion_pct"] / COMPLETION_RANGE
-    ) / 2
-    return result.sort_values(
-        ["audience_score", "rating_count", "movieId"],
-        ascending=[False, False, True],
-    ).reset_index(drop=True)
 
 
 if __name__ == "__main__":

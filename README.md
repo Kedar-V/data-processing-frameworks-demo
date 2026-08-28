@@ -1,209 +1,150 @@
-# Dataframe Engines TA Demo
+# Dataframe Engines Teaching Demo
 
-A question-driven, 45-minute teaching demo of Pandas, Polars, and PySpark using
-MovieLens data.
+A short, run-it-yourself introduction to data formats and dataframe engines,
+built for a data engineering course. Students run the cells, watch file size
+and runtime change with scale, and leave with a feel for CSV vs Parquet and
+Pandas vs Polars vs PySpark. It is deliberately **not** a data analysis
+assignment — that comes later, on a dataset each student chooses.
 
-The goal is not to declare a universal benchmark winner. The lesson uses one
-analytics question—
-
-> **Which widely rated movies have the strongest combined rating and viewing-completion score?**
-
-—to show why similar dataframe syntax can follow very different execution
-paths. Students build the analysis from filtering and grouping, run the same
-pipeline in three engines, verify that the answers match, and then interpret
-runtime through execution architecture.
-
-By the end, students should be able to ask:
-
-1. **Where** does the work run?
-2. **When** does execution begin?
-3. **How** does the engine organize the work?
-4. Which execution model fits the workload they actually have?
-
-## Quick start
-
-Requirements:
-
-- Python 3.11+
-- Java 17+ for local PySpark
-- roughly 20 GB of free disk space for all prepared and synthetic scale datasets
-
-```bash
-make setup
-make data
-.venv/bin/jupyter lab notebooks/movielens_dataframe_engines_simple.ipynb
-```
-
-Choose the **Dataframe Engines** kernel if Jupyter does not select it
-automatically. `make data` downloads the stable MovieLens 32M archive, extracts
-only `ratings.csv` and `movies.csv`, and creates seeded, nested 100-row, 200K,
-500K, 1M, and 10M subsets plus the complete Parquet file. Preparation adds
-deterministic synthetic numeric engagement metrics for the teaching workload.
-Run `make synthetic` separately to create the exact 70M, 100M, 350M, and 500M
-partitioned inputs.
-
-Run the notebook once before class to confirm Java, refresh trusted outputs, and
-avoid spending teaching time on environment setup.
-
-## Teaching notebook
-
-The primary artifact is:
+The classroom notebook is:
 
 ```text
 notebooks/movielens_dataframe_engines_simple.ipynb
 ```
 
-Every markdown section starts with a question that the following explanation,
-code, or output answers. The main path uses one Polars implementation so the
-story remains focused on execution architecture. The benchmark compares both
-Polars Eager and Polars Lazy, and the optional appendix explains the lazy plan.
+It is designed to be walked through in about 20 minutes and executes in well
+under a minute on a modern laptop.
 
-The live demo defaults to:
+## Student setup
 
-```python
-FAST_DEMO = True
-MIN_RATINGS = 1_000
-TOP_N = 10
+Cursor no longer offers its education plan, so students should use **VS Code
+with GitHub Copilot** (free through the GitHub Student Developer Pack) plus the
+*Python* and *Jupyter* extensions.
+
+Requirements:
+
+- Python 3.11+
+- Java 17+ for local PySpark (the Spark cells are skipped, not failed, if it is missing)
+- roughly 1 GB of free disk space for the notebook's own data
+
+```bash
+make setup   # creates .venv and registers the "Dataframe Engines" kernel
+make data    # downloads MovieLens 32M and writes the Parquet subsets
+make notebook
 ```
 
-`FAST_DEMO=True` uses a deterministic 1M-row subset so all three engines can run
-comfortably during class. `MIN_RATINGS=1_000` gives “widely rated” a concrete
-meaning and prevents a movie with one five-star rating from dominating the
-answer. Rating and completion are normalized to 0–1 before they contribute
-equally to the final audience score.
+Pick the **Dataframe Engines** kernel if Jupyter does not select it
+automatically. `make data` extracts only `ratings.csv` and `movies.csv` from the
+MovieLens 32M archive and writes seeded, nested 100-row, 200K, 500K, 1M, 10M,
+and full 32M Parquet subsets. Run the notebook once before class so Java and
+the data are known-good.
 
-### 45-minute storyline
+## What the notebook covers
 
-- **0–4 min:** Are the environment and input data ready?
-- **4–9 min:** Is the dataset clean, and when would normalization help?
-- **9–15 min:** What do filtering and grouping do to rows?
-- **15–21 min:** How does Pandas execute the complete analysis?
-- **21–26 min:** What changes when Polars uses a parallel native engine?
-- **26–34 min:** How does PySpark turn the request into partitioned work?
-- **34–40 min:** Do the answers match, and how does runtime change with scale?
-- **40–45 min:** Which engine fits which workload?
+1. **Environment** — kernel, packages, and a printed description of the machine,
+   since every runtime below belongs to that machine.
+2. **100 rows in CSV** — what the format actually is, read as plain text.
+3. **Scaling to 100K and 1M rows** — CSV size, parse time, missing schema, and
+   the inability to skip columns, all measured side by side against Parquet.
+4. **Why Parquet** — columnar layout, embedded schema, compression, column
+   pruning, and the round-trip that silently widens `float32` to `float64`.
+5. **A minimal cleaning workflow** — deduplicate, impute, normalize, one line
+   each, with a prompt for what students would add.
+6. **One task, three engines** — the same query in Pandas, Polars, and PySpark,
+   with a syntax comparison table and an equality check across every result.
+   Polars appears in both modes: `read_parquet` runs immediately, while
+   `scan_parquet` builds a plan that only `collect()` executes. The printed plan
+   shows the optimizer deducing `PROJECT 2/8 COLUMNS` on its own.
+7. **Scaling** — two charts. The first is measured live at 100, 200K, 1M, 10M,
+   and 32M rows on the student's machine. The second is pre-measured out to one
+   billion rows, where PySpark's fixed overhead finally pays off: it passes
+   Pandas at 100M, Polars Lazy at 500M, and is more than twice as fast at 1B
+   (5.54 s vs 13.49 s). Going from 500M to 1B costs Spark 1.8x more time but
+   costs Polars Lazy 3.6x — one machine running out of room.
 
-Spark is deliberately local in this demo; its multi-machine architecture is
-explained conceptually. The optional Polars planning section appears after the
-main takeaway so it does not interrupt the 45-minute storyline.
+The notebook writes its CSV/Parquet comparison files to `data/formats/`, which
+is Git-ignored and recreated on every run.
 
-The longer `notebooks/movielens_dataframe_engines.ipynb` is retained as an
-extended reference for instructors who want a deeper Polars mode comparison.
+## The shared query
+
+One query definition is used by the notebook, the CLI entry points in
+`implementations/`, the benchmark harness, and `make validate`:
+
+```text
+read movieId, rating -> group by movieId -> mean(rating), count(rating)
+  -> keep count >= 1000 -> join movies for title
+  -> sort avg_rating desc, movieId asc
+```
+
+Keeping a single definition is what makes the notebook's live timings and the
+pre-measured scaling chart comparable.
 
 ## Commands
 
 ```bash
-make format
+make format     # Black over the Python sources and both notebooks
 make pandas
 make polars
 make spark
 make benchmark
-make benchmark-crossover
 make validate
 ```
 
-`make format` applies Black to the Python source and both notebooks.
+`make validate` checks row counts, schemas, nested subsets, and that Pandas,
+Polars, and PySpark agree within floating-point tolerance. Correctness comes
+before performance: a fast wrong answer is still wrong.
 
-`make validate` checks exact row counts, enriched schemas, feature ranges,
-nested subsets, and equivalent Pandas, Polars, and PySpark results within
-floating-point tolerance. Correctness comes before performance: a fast wrong
-answer is still wrong.
+## Extended material
 
-## Benchmark methodology
+`notebooks/movielens_dataframe_engines.ipynb` is the longer instructor
+reference, with an execution-model walkthrough the classroom notebook leaves
+out. It is self-contained and reads `results/benchmark_results.csv`, which is
+frozen: those numbers were measured with an older, wider six-column
+aggregation and predate the single shared query described above. Do not mix
+them with `results/benchmark_results_simple.csv`.
 
-The notebook deliberately separates:
+`results/benchmark_results_simple.csv` holds the shared query timed from 100
+rows through one billion, three repeats per point, median reported. The
+classroom notebook reads it for its second scaling chart and measures everything
+else live. The partitioned 70M through 1B inputs come from `make synthetic` and
+need roughly 20 GB of free disk space; the 1B directory alone is 9.7 GB.
 
-- **Live measurements:** one cold, end-to-end run during the demo. These create
-  immediacy but are too noisy for ranking.
-- **Prepared measurements:** the median of three end-to-end runs. These form the
-  scaling chart.
+Pandas stops at 100M and Polars Eager at 350M by design. At a billion rows the
+two required columns alone are about 8 GB before any grouping, so only Polars
+Lazy and PySpark run the largest sizes.
 
-The shared timed path is:
-
-```text
-read six metrics → aggregate movie profiles → filter → normalize
-                 → join → sort → materialize
-```
-
-`make benchmark` runs the 1M dataset by default. `make benchmark-crossover`
-regenerates the simplified notebook's results from 100 rows through 500M using
-three repeats. To protect local memory, Pandas stops after 100M, Polars Eager
-after 350M, and Polars Lazy plus PySpark continue through 500M.
-
-To regenerate the extended comparison directly:
+To regenerate:
 
 ```bash
-.venv/bin/python benchmarks/benchmark.py \
-  --framework all \
-  --sizes 1m 10m 32m \
-  --repeats 3
+make synthetic
+make benchmark-crossover
 ```
 
-Results are merged into `results/benchmark_results.csv`. They describe the
-machine that produced them, not a universal framework ranking. Startup,
-filesystem caches, JVM warm-up, available cores, and optimizer behavior all
-matter.
+`make benchmark-crossover` already covers every framework and size pair,
+including 350M and 500M. `make benchmark-big` re-runs only the large sizes and
+is useful when just those need refreshing.
 
-The simplified notebook reads `results/benchmark_results_simple.csv`. Live 1M
-measurements are shown separately and never overwrite the prepared medians.
-Its small-scale chart compares Pandas with both Polars execution modes and
-calculates their speedups. On the recorded machine, both Polars modes are
-already faster at 100 rows, so the evidence does not show a crossover within
-the tested range; it shows that the crossover is below 100 rows, or absent for
-this workload and benchmark boundary.
+Each prepared run creates and stops its own Spark session, so PySpark's fixed
+cost is included at every point. The notebook's live chart reuses one session
+and therefore shows lower PySpark numbers at small sizes; both are disclosed in
+the notebook.
+
+These results describe the machine that produced them, not a universal
+framework ranking. Startup cost, filesystem caches, JVM warm-up, available
+cores, and optimizer behavior all matter. The lesson is not "Spark wins after
+exactly N rows" — it is that Spark's fixed overhead stops mattering once the
+data outgrows one machine.
 
 ## Data layout
 
 ```text
 data/raw/ratings.csv
 data/raw/movies.csv
-data/parquet/ratings_100.parquet
-data/parquet/ratings_200k.parquet
-data/parquet/ratings_500k.parquet
-data/parquet/ratings_1m.parquet
-data/parquet/ratings_10m.parquet
-data/parquet/ratings_32m.parquet
+data/parquet/ratings_{100,200k,500k,1m,10m,32m}.parquet
 data/parquet/movies.parquet
-data/synthetic/ratings_70m.parquet/
-data/synthetic/ratings_100m.parquet/
-data/synthetic/ratings_350m.parquet/
-data/synthetic/ratings_500m.parquet/
+data/formats/ratings_{100,100k,1m}.{csv,parquet}
+data/synthetic/ratings_{70m,100m,350m,500m,1b}.parquet/
 ```
 
-Raw and prepared data are intentionally ignored by Git. MovieLens is provided
+Raw and generated data are intentionally ignored by Git. MovieLens is provided
 by GroupLens; review its dataset README and terms before redistributing data.
-
-## Large synthetic scale points
-
-The chart includes exact 70M, 100M, 350M, and 500M-row synthetic points. Each
-repeats the enriched 32M ratings source and writes a partial final partition
-when needed, so these inputs test scale rather than new movie behavior.
-
-To reproduce it:
-
-```bash
-make synthetic
-make benchmark-big
-```
-
-The large Polars run uses its planning interface so the engine can scan
-partitioned sources without first creating one enormous eager dataframe.
-Unsafe framework/size combinations are intentionally omitted rather than
-treated as zero-runtime results.
-
-The lesson is not “Spark wins after exactly N rows.” Hardware, caching,
-partitioning, and optimizer behavior can move the crossover. Spark's durable
-advantage is that the same partitioned execution model can extend from one
-laptop to multiple machines.
-
-## Optional extensions
-
-After the core lesson, instructors can explore:
-
-- the optional Polars planning appendix;
-- warm-versus-cold timing;
-- different popularity thresholds;
-- a real multi-machine Spark cluster.
-
-Recommendation systems, tags, UDFs, and advanced optimizer internals are
-intentionally outside the core demo.

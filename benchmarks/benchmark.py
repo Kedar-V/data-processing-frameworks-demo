@@ -29,6 +29,7 @@ DATASETS = {
     "100m": (100_000_000, ROOT / "data/synthetic/ratings_100m.parquet"),
     "350m": (350_000_000, ROOT / "data/synthetic/ratings_350m.parquet"),
     "500m": (500_000_000, ROOT / "data/synthetic/ratings_500m.parquet"),
+    "1b": (1_000_000_000, ROOT / "data/synthetic/ratings_1b.parquet"),
 }
 FRAMEWORKS = ["pandas", "polars-eager", "polars-lazy", "spark"]
 LABELS = {
