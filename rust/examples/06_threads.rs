@@ -27,11 +27,10 @@ fn run(threads: u64) -> (u64, f64) {
         let mut handles = Vec::new();
         for t in 0..threads {
             let from = t * chunk;
-            let to = if t == threads - 1 {
-                ITERATIONS
-            } else {
-                from + chunk
-            };
+            let mut to = from + chunk;
+            if t == threads - 1 {
+                to = ITERATIONS; // the last thread mops up any remainder
+            }
             handles.push(scope.spawn(move || partial_sum(from, to)));
         }
 

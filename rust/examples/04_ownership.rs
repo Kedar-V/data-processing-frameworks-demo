@@ -6,8 +6,8 @@
 // The `&` means borrowed: this function may look at the values, not keep them.
 fn average(ratings: &Vec<f64>) -> f64 {
     let mut total = 0.0;
-    for rating in ratings {
-        total += rating;
+    for i in 0..ratings.len() {
+        total += ratings[i];
     }
     total / ratings.len() as f64
 }

@@ -8,14 +8,12 @@
 // watch it happen.
 
 struct Buffer {
-    name: String,
     data: Vec<u8>,
 }
 
-fn make_buffer(name: &str, megabytes: usize) -> Buffer {
-    println!("  allocate {name}: {megabytes} MB");
+fn make_buffer(megabytes: usize) -> Buffer {
+    println!("  allocate {megabytes} MB");
     Buffer {
-        name: name.to_string(),
         data: vec![0; megabytes * 1024 * 1024],
     }
 }
@@ -24,7 +22,7 @@ fn make_buffer(name: &str, megabytes: usize) -> Buffer {
 impl Drop for Buffer {
     fn drop(&mut self) {
         let megabytes = self.data.len() / 1024 / 1024;
-        println!("  FREE {}: {} MB released", self.name, megabytes);
+        println!("  FREE {megabytes} MB");
     }
 }
 
@@ -33,15 +31,15 @@ fn main() {
 
     {
         println!("  enter inner scope");
-        let _scratch = make_buffer("scratch", 64);
+        let _scratch = make_buffer(64);
         println!("  inner scope is about to end");
-    } // <- scratch is freed here, on this closing brace
+    } // <- the 64 MB is freed here, on this closing brace
 
-    println!("back in main: scratch is already gone");
+    println!("back in main: that memory is already gone");
 
-    let _a = make_buffer("a", 8);
-    let _b = make_buffer("b", 16);
+    let _small = make_buffer(8);
+    let _large = make_buffer(16);
 
     println!("end of main (watch the order)");
-    // b and a are freed here, in reverse order of creation.
+    // _large and _small are freed here, in reverse order of creation.
 }

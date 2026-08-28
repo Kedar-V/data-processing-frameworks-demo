@@ -8,8 +8,8 @@
 
 fn average(ratings: &Vec<u64>) -> f64 {
     let mut total = 0;
-    for rating in ratings {
-        total += rating;
+    for i in 0..ratings.len() {
+        total += ratings[i];
     }
     total as f64 / ratings.len() as f64
 }
@@ -34,9 +34,9 @@ fn main() {
     // Deleting items while looping over them does not compile. Build the list
     // you want instead, then replace the old one.
     let mut keep = Vec::new();
-    for rating in &ratings {
-        if *rating >= 3 {
-            keep.push(*rating);
+    for i in 0..ratings.len() {
+        if ratings[i] >= 3 {
+            keep.push(ratings[i]);
         }
     }
     ratings = keep;
