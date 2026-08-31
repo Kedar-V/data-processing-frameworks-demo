@@ -3,12 +3,12 @@
 // `let` alone means immutable. Python has no equivalent of this error --
 // there, every name can be pointed at something new at any time.
 //
-// Fix: `let mut limit = 1000;`
+// Fix: `let mut min_ratings = 1000;`
 
 fn main() {
-    let limit = 1000;
-    println!("limit starts at {limit}");
+    let min_ratings = 1000;
+    println!("keep movies with at least {min_ratings} ratings");
 
-    limit = 2000;
-    println!("limit is now {limit}");
+    min_ratings = 2000;
+    println!("keep movies with at least {min_ratings} ratings");
 }

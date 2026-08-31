@@ -4,17 +4,12 @@
 fn main() {
     // Immutable: this value is fixed once it is set.
     let min_ratings = 1000;
-    println!("min_ratings = {min_ratings}");
+    println!("keep movies with at least {min_ratings} ratings");
 
-    // Mutable: `mut` is you telling the compiler that this one will change.
+    // Mutable: `mut` is you telling the compiler this one will change.
     let mut rows_read = 0;
     for _ in 0..3 {
         rows_read += 100_000;
-        println!("rows_read   = {rows_read}");
+        println!("rows_read = {rows_read}");
     }
-
-    // Types are decided at compile time, even when you do not write them down.
-    let average = 3.7; // a decimal point, so this is a float
-    let count = 42; // no decimal point, so this is an integer
-    println!("average = {average}, count = {count}");
 }

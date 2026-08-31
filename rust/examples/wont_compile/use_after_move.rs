@@ -1,16 +1,14 @@
 // EXPECTED TO FAIL: error[E0382]
 //
-// `let second = first;` moves ownership. There is no longer a valid `first`.
+// `let moved = ratings;` moves ownership. There is no longer a valid `ratings`.
 //
-// In Python the same two lines give you two names for one list, which is
-// where aliasing bugs come from: mutate through `second` and `first` changes
-// too, silently. Rust makes you choose -- move it, borrow it, or clone it.
+// In Python the same two lines give you two names for one list.
 //
-// Fix: `let second = first.clone();` or read through a borrow.
+// Fix: `let moved = ratings.clone();` or only use `moved` afterwards.
 
 fn main() {
-    let first = vec![1, 2, 3];
-    let second = first;
+    let ratings = vec![4.5, 3.0, 5.0];
+    let moved = ratings;
 
-    println!("{first:?} {second:?}");
+    println!("{ratings:?} {moved:?}");
 }

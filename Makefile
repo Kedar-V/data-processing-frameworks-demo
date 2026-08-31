@@ -11,7 +11,7 @@ SPARK_LOCAL_IP ?= 127.0.0.1
 export JAVA_HOME
 export SPARK_LOCAL_IP
 
-.PHONY: setup data synthetic pandas polars spark benchmark benchmark-crossover benchmark-big validate format notebook rust rust-errors rust-notebook
+.PHONY: setup data synthetic pandas polars spark benchmark benchmark-crossover benchmark-big validate format notebook rust rust-errors rust-kernel rust-notebook
 
 setup:
 	python3 -m venv .venv
@@ -67,6 +67,12 @@ rust:
 
 rust-errors:
 	$(PYTHON) scripts/run_rust_examples.py --errors
+
+rust-kernel:
+	cargo install evcxr_jupyter
+	PATH="$(HOME)/.cargo/bin:$$PATH" evcxr_jupyter --install
+	mkdir -p .venv/share/jupyter/kernels
+	cp -R "$(HOME)/Library/Jupyter/kernels/rust" .venv/share/jupyter/kernels/rust
 
 rust-notebook:
 	$(PYTHON) -m jupyter lab notebooks/rust_vs_python_intro.ipynb

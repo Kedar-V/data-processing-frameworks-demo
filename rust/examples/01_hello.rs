@@ -1,12 +1,10 @@
-// Rust has a step Python does not: the compiler runs before the program does.
+// The compiler checks this file before anything runs.
 //
-//   rustc --edition 2024 01_hello.rs -o hello   # compile once
-//   ./hello                                     # run as often as you like
+//   rustc --edition 2024 01_hello.rs -o hello
+//   ./hello
 
 fn main() {
     let engine = "Rust";
-    let year = 2026;
-
-    println!("Hello from {engine}, {year}.");
+    println!("Hello from {engine}.");
     println!("This file was checked by the compiler before it ran.");
 }
