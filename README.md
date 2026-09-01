@@ -41,6 +41,10 @@ make setup   # creates .venv and registers the "Dataframe Engines" Jupyter kerne
 make data    # downloads MovieLens 32M and writes the Parquet files
 ```
 
+If `make data` warns that the GroupLens TLS certificate failed, that is expected while
+`files.grouplens.org` has an expired cert. The download still runs and checks the zip
+against GroupLens's published MD5.
+
 For part 2, install Rust, then the Rust Jupyter kernel:
 
 ```bash
