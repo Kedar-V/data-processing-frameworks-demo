@@ -5,7 +5,7 @@ not a data analysis assignment.
 
 ```text
 notebooks/movielens_dataframe_engines_simple.ipynb   # part 1: CSV, Parquet, Pandas, Polars, PySpark
-notebooks/rust_vs_python_intro.ipynb                 # part 2: three Rust ideas
+notebooks/rust_vs_python_intro.ipynb                 # part 2: a little Rust, then three ideas
 ```
 
 ## Learning objectives
@@ -18,9 +18,12 @@ notebooks/rust_vs_python_intro.ipynb                 # part 2: three Rust ideas
 
 **Part 2.** After `rust_vs_python_intro.ipynb` you should be able to:
 
+- Read a small Rust cell: `fn main`, `if` / `else if`, and `for`.
 - Say why Polars can be fast from Python: it is compiled Rust, checked before it runs.
-- Contrast `let` vs `let mut`, and `b = a` in Python (two names, one list) vs Rust (ownership moves).
-- Read a compiler error that is supposed to fail, instead of treating every red cell as a broken notebook.
+- Contrast `let` vs `let mut`, `b = a` (Python shares; Rust moves), and changing a list while looping (Python can skip an item; Rust will not compile).
+- Change a **Your turn** cell (a string, a number, an `if`, `mut`, `.clone()`) and read a compiler error you caused on purpose.
+
+
 
 ## What you need
 
@@ -29,10 +32,11 @@ notebooks/rust_vs_python_intro.ipynb                 # part 2: three Rust ideas
 - Rust (`rustc` / `cargo`) for part 2
 - About 1 GB of free disk
 
-Use **VS Code** with the *Python* and *Jupyter* extensions. GitHub Copilot is
-free for students through the GitHub Student Developer Pack.
+Use **VS Code** with the *Python* and *Jupyter* extensions.
 
 ## Setup
+
+Full student instructions (macOS and Windows): [SETUP.md](SETUP.md).
 
 In the project folder:
 
@@ -51,7 +55,7 @@ For part 2, install Rust, then the Rust Jupyter kernel:
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ```
 
-On Windows, run `rustup-init.exe` from <https://rustup.rs>. Open a **new**
+On Windows, run `rustup-init.exe` from [https://rustup.rs](https://rustup.rs). Open a **new**
 terminal afterward so `cargo` is on your `PATH`.
 
 ```bash
@@ -70,8 +74,7 @@ to bottom.
 
 ## Part 2
 
-Do part 1 first. The last optional cells in part 2 read
-`data/formats/ratings_1m.csv`, which part 1 writes.
+Do part 1 first.
 
 Open `notebooks/rust_vs_python_intro.ipynb` (or run `make rust-notebook`).
 
@@ -80,6 +83,7 @@ any `.ipynb`. Click the kernel name → **Select Another Kernel...** →
 **Jupyter Kernel...** → **Rust**. If `let` is a `SyntaxError`, you are still
 on Python.
 
-Run the cells from top to bottom. Two cells are **supposed to fail** — read the
-error and keep going. Sections 1–3 are the class. Everything after the takeaway
-is optional.
+Run the cells from top to bottom. Each class section has a demo and a **Your
+turn** cell: change the marked line, then run. Three demo cells are **supposed
+to fail** — read the error, then try the fix. Sections 1–6 are the class.
+After the takeaway there is one optional section (where the memory goes).
