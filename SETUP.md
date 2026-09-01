@@ -37,7 +37,9 @@ Do the installs in order. After each step, tell me the exact command to run and 
 
 If `make data` warns that the GroupLens TLS certificate failed, that is expected — keep going.
 
-Do not skip the Rust kernel. Do not switch me to a different Python distribution, Java version, or notebook kernel than SETUP.md specifies. If a command fails, explain the error and the next command to try. Stop when both notebooks have the right kernel: part 1 = Dataframe Engines, part 2 = Rust.
+Do not skip the Rust kernel. Do not switch me to a different Python distribution, Java version, or notebook kernel than SETUP.md specifies. If a command fails, explain the error and the next command to try.
+
+Before you stop, run the **Verification** section of SETUP.md with me. Do not say we are done until every check passes. If a check fails, fix that step using SETUP.md and re-run the whole list. Part 1 kernel = Dataframe Engines. Part 2 kernel = Rust.
 ```
 
 ---
@@ -144,10 +146,54 @@ Same as macOS: part 1 = **Dataframe Engines**, part 2 = **Rust**. If `let` is a 
 
 ---
 
+## Verification
+
+Run these in the project folder. Every line must succeed.
+
+**macOS**
+
+```bash
+python3 --version          # 3.11 or newer
+java -version              # 17 or newer
+rustc --version
+cargo --version
+.venv/bin/python -m jupyter kernelspec list
+```
+
+**Windows**
+
+```bat
+python --version
+java -version
+rustc --version
+cargo --version
+.venv\Scripts\python -m jupyter kernelspec list
+```
+
+`kernelspec list` must include **Dataframe Engines** (`dataframe-engine-benchmark`) and **Rust** (`rust`).
+
+Then confirm the Rust kernel actually runs (not Python). This must print `Hello from Rust.` If `evcxr` is not found, use the full path: `~/.cargo/bin/evcxr` on macOS, or `%USERPROFILE%\.cargo\bin\evcxr.exe` on Windows.
+
+**macOS**
+
+```bash
+printf '%s\n' 'println!("Hello from Rust.");' | evcxr
+```
+
+**Windows (PowerShell)**
+
+```powershell
+"println!(`"Hello from Rust.`");" | evcxr
+```
+
+If that prints `Hello from Rust.`, open `notebooks/movielens_dataframe_engines_simple.ipynb` with kernel **Dataframe Engines** and `notebooks/rust_vs_python_intro.ipynb` with kernel **Rust**. If `let` is a `SyntaxError`, you are still on Python.
+
 ## You are done when
 
 - `python --version` is 3.11+
 - `java -version` is 17+
 - `rustc --version` works
+- `jupyter kernelspec list` shows **Dataframe Engines** and **Rust**
+- `evcxr` printed `Hello from Rust.`
 - Part 1 runs with the **Dataframe Engines** kernel
 - Part 2 runs with the **Rust** kernel
