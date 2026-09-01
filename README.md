@@ -65,7 +65,6 @@ any `.ipynb`. Click the kernel name → **Select Another Kernel...** →
 **Jupyter Kernel...** → **Rust**. If `let` is a `SyntaxError`, you are still
 on Python.
 
-Run the cells from top to bottom. Each class section has a demo and a **Your
-turn** cell: change the marked line, then run. Three demo cells are **supposed
-to fail** — read the error, then try the fix. Sections 1–6 are the class.
-After the takeaway there is one optional section (where the memory goes).
+Run the cells from top to bottom. A few cells are supposed to fail: read the
+one sentence that matters, then keep going. After the takeaway there is one
+optional extra about memory.
