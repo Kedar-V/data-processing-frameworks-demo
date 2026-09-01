@@ -23,8 +23,6 @@ notebooks/rust_vs_python_intro.ipynb                 # part 2: a little Rust, th
 - Contrast `let` vs `let mut`, `b = a` (Python shares; Rust moves), and changing a list while looping (Python can skip an item; Rust will not compile).
 - Change a **Your turn** cell (a string, a number, an `if`, `mut`, `.clone()`) and read a compiler error you caused on purpose.
 
-
-
 ## What you need
 
 - Python 3.11+
@@ -36,33 +34,17 @@ Use **VS Code** with the *Python* and *Jupyter* extensions.
 
 ## Setup
 
-Full student instructions (macOS and Windows): [SETUP.md](SETUP.md).
+Full student instructions (macOS and Windows), including a Copilot prompt: [SETUP.md](SETUP.md).
 
 In the project folder:
 
 ```bash
 make setup   # creates .venv and registers the "Dataframe Engines" Jupyter kernel
 make data    # downloads MovieLens 32M and writes the Parquet files
-```
-
-If `make data` warns that the GroupLens TLS certificate failed, that is expected while
-`files.grouplens.org` has an expired cert. The download still runs and checks the zip
-against GroupLens's published MD5.
-
-For part 2, install Rust, then the Rust Jupyter kernel:
-
-```bash
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-```
-
-On Windows, run `rustup-init.exe` from [https://rustup.rs](https://rustup.rs). Open a **new**
-terminal afterward so `cargo` is on your `PATH`.
-
-```bash
 make rust-kernel
 ```
 
-The first kernel install compiles for a few minutes. Let it finish.
+If `make data` warns that the GroupLens TLS certificate failed, that is expected. Let it finish. The first `make rust-kernel` compiles for a few minutes.
 
 ## Part 1
 

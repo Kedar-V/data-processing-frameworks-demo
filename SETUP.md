@@ -10,9 +10,35 @@ You will need about **1 GB of free disk**. Spark cells skip themselves if Java i
 - **VS Code** with the [Python](https://marketplace.visualstudio.com/items?itemName=ms-python.python) and [Jupyter](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.jupyter) extensions
 - Git (to clone the repo)
 
-Clone the project, then `cd` into the project folder. Follow **macOS** or **Windows** below.
+Clone the project, then `cd` into the project folder. Follow **macOS** or **Windows** below, or paste the Copilot prompt in the next section and let it walk you through the same steps on your machine.
 
 If `make data` warns that the GroupLens TLS certificate failed, that is expected. Let it finish.
+
+---
+
+## Copilot prompt (if you get stuck)
+
+GitHub Copilot is [free for students](https://education.github.com/pack). In VS Code, open this repo, open Copilot Chat, and paste:
+
+```text
+I am setting up this course repo on my computer before class.
+
+Follow SETUP.md in this repo. Detect whether I am on macOS or Windows and use only that section.
+
+I need:
+- Python 3.11 or newer
+- Java 17 or newer (for PySpark)
+- Rust (rustc and cargo) for part 2
+- VS Code with the Python and Jupyter extensions
+- The "Dataframe Engines" Jupyter kernel (part 1)
+- The Rust Jupyter kernel from `make rust-kernel` or `evcxr_jupyter --install` (part 2)
+
+Do the installs in order. After each step, tell me the exact command to run and what success looks like (for example `python --version`, `java -version`, `rustc --version`).
+
+If `make data` warns that the GroupLens TLS certificate failed, that is expected — keep going.
+
+Do not skip the Rust kernel. Do not switch me to a different Python distribution, Java version, or notebook kernel than SETUP.md specifies. If a command fails, explain the error and the next command to try. Stop when both notebooks have the right kernel: part 1 = Dataframe Engines, part 2 = Rust.
+```
 
 ---
 
